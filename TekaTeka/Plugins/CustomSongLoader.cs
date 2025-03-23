@@ -25,7 +25,8 @@ namespace TekaTeka.Plugins
         public const string ASSETS_FOLDER = "ReadAssets";
         public const string SONGS_FOLDER = "sound";
 
-        public static readonly string songsPath = Path.Combine(BepInEx.Paths.GameRootPath, "TekaSongs");
+        public static string songsPath => Plugin.Instance.ConfigSongsPath.Value;
+        public static string prevSongsPath = string.Empty;
 
         static List<MusicDataInterface.MusicInfo> customSongsList = new List<MusicDataInterface.MusicInfo>();
 
@@ -44,6 +45,7 @@ namespace TekaTeka.Plugins
 
         public static void InitializeLoader()
         {
+            prevSongsPath = songsPath;
             if (!Directory.Exists(songsPath))
             {
                 Directory.CreateDirectory(songsPath);
@@ -53,6 +55,47 @@ namespace TekaTeka.Plugins
             {
                 Directory.CreateDirectory(Path.Combine(songsPath, "TJAsongs"));
             }
+        }
+
+        public static void ReloadSongs()
+        {
+            Logger.Log("ReloadSongs");
+            Logger.Log("prevSongsPath: " + prevSongsPath);
+            Logger.Log("songsPath: " + songsPath);
+            if (songsManager is null)
+            {
+                songsManager = new ModdedSongsManager();
+            }
+            else if (prevSongsPath != songsPath)
+            {
+                UnloadSongs();
+                LoadSongs();
+            }
+        }
+
+        public static void LoadSongs()
+        {
+            Logger.Log("LoadSongs");
+            InitializeLoader();
+            if (songsManager is null)
+            {
+                songsManager = new ModdedSongsManager();
+            }
+            else
+            {
+                songsManager.SetupMods();
+                songsManager.PublishSongs();
+            }
+        }
+
+        public static void UnloadSongs()
+        {
+            Logger.Log("UnloadSongs");
+            if (songsManager is not null)
+            {
+                songsManager.RemoveAllModdedSongs();
+            }
+            prevSongsPath = string.Empty;
         }
 
         [HarmonyPrefix]
@@ -154,14 +197,15 @@ namespace TekaTeka.Plugins
             SongMod? mod = songsManager.GetModFromId(musicinfo.Id);
             if (mod != null)
             {
-                if (musicinfo.SubscriptionRegionList.Length != 0 || musicinfo.Reserve3 != "")
+                if ((musicinfo.SubscriptionRegionList is not null && musicinfo.SubscriptionRegionList.Length != 0) || 
+                    (musicinfo.Reserve3 is not null && musicinfo.Reserve3 != ""))
                 {
                     Logger.Log($"Removing new song: {musicinfo.Id}: official ID: {musicinfo.UniqueId}");
                     mod.RemoveMod(musicinfo.Id, songsManager);
                 }
                 else
                 {
-                    Logger.Log($"Ignoring deletion on DLC removed song: {musicinfo.Id} {musicinfo.UniqueId}");
+                    Logger.Log($"Ignoring deletion on DLC removed song: {musicinfo.Id} {musicinfo.UniqueId}", LogType.Debug);
                     // mod.RemoveMod(musicinfo.Id, songsManager);
                 }
             }

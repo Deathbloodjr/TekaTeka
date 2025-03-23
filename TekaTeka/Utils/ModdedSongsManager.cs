@@ -25,6 +25,7 @@ namespace TekaTeka.Utils
 
         public ModdedSongsManager()
         {
+
             foreach (MusicDataInterface.MusicInfoAccesser accesser in musicData.MusicInfoAccesserList)
             {
                 this.currentSongs.Add(accesser.UniqueId);
@@ -101,15 +102,19 @@ namespace TekaTeka.Utils
             }
         }
 
-        public void RemoveMusicInfo(MusicDataInterface.MusicInfo musicInfo)
+        public void RemoveMusicInfo(MusicDataInterface.MusicInfo musicInfo, bool sortAfter = true)
         {
             this.currentSongs.Remove(musicInfo.UniqueId);
-            this.songFileToMod.Remove(musicInfo.Id);
+            this.songFileToMod.Remove(musicInfo.SongFileName);
             this.uniqueIdToMod.Remove(musicInfo.UniqueId);
             this.idToMod.Remove(musicInfo.Id);
             this.musicInfos.Remove(musicInfo);
             musicData.RemoveMusicInfo(musicInfo.UniqueId);
-            musicData.SortByOrder();
+            if (sortAfter)
+            {
+                // Why sorting when removing songs anyway?
+                musicData.SortByOrder();
+            }
         }
 
         public void RetainMusicInfo(MusicDataInterface.MusicInfo musicInfo, SongMod mod)
@@ -133,10 +138,27 @@ namespace TekaTeka.Utils
                 this.musicData.AddMusicInfo(ref tmp);
             }
             this.musicData.SortByOrder();
+            Logger.Log($"PublishSongs: {musicData.MusicInfoAccesserList.Count} songs within MusicInfoAccesserList");
+
+        }
+
+
+        public void RemoveAllModdedSongs()
+        {
+            // I would like another version of this function 
+            // That instead removes all non-modded songs
+            for (int i = 0; i < this.musicInfos.Count; i++)
+            {
+                RemoveMusicInfo(musicInfos[i], false);
+                i--;
+            }
+            // I guess sorting isn't necessary when removing songs, is it
+            this.musicData.SortByOrder();
         }
 
         public void SetupMods()
         {
+            Logger.Log("SetupMods", LogType.Debug);
             List<SongMod> mods = this.GetMods();
             foreach (SongMod mod in mods)
             {

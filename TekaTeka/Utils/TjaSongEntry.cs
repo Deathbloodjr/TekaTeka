@@ -65,6 +65,7 @@ namespace TekaTeka.Utils
                                                                 SongSubES = this.song.metadata.subtitle,
                                                                 SongSubDE = this.song.metadata.subtitle,
                                                                 SongSubIT = this.song.metadata.subtitle,
+                                                                IsDispJpSongName = song.metadata.titleJA != song.metadata.titleEN,
                                                                 ShinutiEasy = shinuchiScores[0],
                                                                 ShinutiNormal = shinuchiScores[1],
                                                                 ShinutiHard = shinuchiScores[2],
