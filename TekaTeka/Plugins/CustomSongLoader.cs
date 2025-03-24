@@ -301,25 +301,34 @@ namespace TekaTeka.Plugins
         {
             // Lets just hope this doesnt cause any leaks...
             __instance.DestroyFumenBuffer();
+            __instance.fumenPath = filePath;
 
             string fileName = Path.GetFileNameWithoutExtension(filePath);
             string songId = fileName.Split("_").First();
 
             Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppStructArray<byte> bytes;
 
-            SongMod? mod = songsManager.GetModPath(songId);
+            // I'm a bit questionable of my logic here
+            // Basically, with NijiiroScoring mod, this ends up being called while songsManager is null, causing errors
+            // If songsManager is null, mod ends up being null as well, leading to it attempting to read normally, causing errors
+            // Hopefully we can limit this by just checking if the file exists, then read it normally?
+            SongMod? mod = songsManager?.GetModPath(songId);
             if (mod != null)
             {
                 SongEntry songEntry = mod.GetSongEntry(fileName);
                 bytes = songEntry.GetFumenBytes();
                 filePath = songEntry.GetFilePath();
             }
-            else
+            else if (File.Exists(filePath))
             {
                 bytes = Cryptgraphy.ReadAllAesAndGZipBytes(filePath, Cryptgraphy.AesKeyType.Type2);
             }
+            else
+            {
+                bytes = Array.Empty<byte>();
+            }
 
-            __instance.fumenPath = filePath;
+            //__instance.fumenPath = filePath;
 
             if (__instance != null)
             {
