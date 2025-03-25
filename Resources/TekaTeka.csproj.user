@@ -3,5 +3,6 @@
   <PropertyGroup>
     <GameDir></GameDir>
     <CopyOutputFiles>false</CopyOutputFiles>
+    <SaveProfileManagerPath></SaveProfileManagerPath>
   </PropertyGroup>
 </Project>
